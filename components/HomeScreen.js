@@ -132,7 +132,9 @@ useEffect(() => {
               title={"My Location"}
             >
               <View style={styles.customMarker}>
-                <View style={[styles.arrow, { transform: [{ rotate: `${heading}deg` }] }]} />
+                <View style={[styles.dot, { transform: [{ rotate: `${heading}deg` }] }]}>
+                  <View style={styles.arrow} />
+                </View>
               </View>
             </Marker>
           )}
@@ -165,23 +167,31 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   customMarker: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 122, 255, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-   arrow: {
-    width: 20,
-    height: 20,
-    backgroundColor: 'transparent',
-    borderTopColor: 'white',
-    borderTopWidth: 2,
-    borderRightColor: 'transparent',
-    borderRightWidth: 10,
+  dot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#007AFF',
+    borderWidth: 5,
+    borderColor: 'rgba(255,255,255, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },  
+   
+  arrow: {
+    position: 'absolute',
+    top: -8,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderBottomWidth: 12,
     borderLeftColor: 'transparent',
-    borderLeftWidth: 10,
+    borderRightColor: 'transparent',
+    borderBottomColor: '#007AFF',
   },
   text: {
     margin: 16,
