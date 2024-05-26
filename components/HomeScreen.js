@@ -1,6 +1,6 @@
 // components/HomeScreen.js
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator, Button, Image } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, Button, Image, TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 
@@ -140,8 +140,14 @@ useEffect(() => {
         </MapView>
       )}
       <View style={styles.buttonContainer}>
-        <Button title="Check My Location" onPress={getUserLocation} />
-        <Button title="Locate Bus" onPress={getBusLocation} />
+        <TouchableOpacity style={styles.fab} onPress={getUserLocation}>
+        <View style={styles.innerFab}>
+          <View style={styles.circle} />
+        </View>
+      </TouchableOpacity>
+        <TouchableOpacity style={[styles.fab, styles.busFab]} onPress={getBusLocation}>
+        <Image source={require('../assets/bus-icon.png')} style={styles.busIcon} />
+      </TouchableOpacity>
       </View>
       {errorMsg && <Text style={styles.text}>{errorMsg}</Text>}
     </View>
@@ -156,7 +162,8 @@ const styles = StyleSheet.create({
   },
   map: {
     width: '100%',
-    height: '80%',
+    height: '90%',
+    marginTop: 50,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -169,10 +176,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  fab: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#4285F4',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+  },
+  innerFab: {
+  width: 52,
+  height: 52,
+  borderRadius: 26,
+  backgroundColor: '#fff',
+  justifyContent: 'center',
+  alignItems: 'center',
+  },
+  circle: {
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  backgroundColor: '#4285F4',
+  },
   busIcon: {
     height: 25,
     width: 25,
     resizeMode: 'center',
+  },
+  busFab: {
+  bottom: 100, // Adjust the position for the bus floating button
   },
   dot: {
     width: 24,
