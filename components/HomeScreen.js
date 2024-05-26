@@ -1,8 +1,9 @@
 // components/HomeScreen.js
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator, Button } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, Button, Image } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
+
 
 const HomeScreen = () => {
   const [busLocation, setBusLocation] = useState(null);
@@ -10,6 +11,8 @@ const HomeScreen = () => {
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
   const [heading, setHeading] = useState(0);
+  const [checkMyLocationPressed, setCheckMyLocationPressed] = useState(false);
+
 
   useEffect(() => {
     const fetchBusLocation = async () => {
@@ -46,13 +49,6 @@ useEffect(() => {
           },
           (location) => {
             setUserLocation(location.coords);
-            // Automatically zoom to the user's location when it's updated
-            mapViewRef.current.animateToRegion({
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-              latitudeDelta: 0.005,
-              longitudeDelta: 0.005,
-            });
           }
         );
 
@@ -121,7 +117,10 @@ useEffect(() => {
                 longitudeDelta: 0.00421,
               }}
               title={"Bus Location"}
-            />
+              anchor={{ x: 0.5, y: 1 }}
+            >
+              <Image source={require('../assets/icons8-bus-48.png')} style={styles.busIcon} />
+            </Marker>
           )}
           {userLocation && (
             <Marker
@@ -169,6 +168,11 @@ const styles = StyleSheet.create({
   customMarker: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  busIcon: {
+    height: 25,
+    width: 25,
+    resizeMode: 'center',
   },
   dot: {
     width: 24,
