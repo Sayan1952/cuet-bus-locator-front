@@ -119,6 +119,7 @@ useEffect(() => {
               title={"Bus Location"}
               anchor={{ x: 0.5, y: 1 }}
             >
+              <Text style={styles.busName}>Shurma</Text>
               <Image source={require('../assets/icons8-bus-48.png')} style={styles.busIcon} />
             </Marker>
           )}
@@ -160,11 +161,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   map: {
     width: '100%',
-    height: '90%',
-    marginTop: 50,
+    height: '100%',
+    marginTop: 10,
   },
+
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -172,13 +175,23 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 20,
   },
+
   customMarker: {
     justifyContent: 'center',
     alignItems: 'center',
   },
+
+   busName: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 5,
+    marginBottom: 5,
+  },
+
   fab: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 100,
     right: 20,
     backgroundColor: '#4285F4',
     width: 56,
@@ -188,6 +201,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 4,
   },
+
   innerFab: {
   width: 52,
   height: 52,
@@ -196,19 +210,22 @@ const styles = StyleSheet.create({
   justifyContent: 'center',
   alignItems: 'center',
   },
+
   circle: {
   width: 40,
   height: 40,
   borderRadius: 20,
   backgroundColor: '#4285F4',
   },
+
   busIcon: {
-    height: 25,
-    width: 25,
-    resizeMode: 'center',
+  height: 25,
+  width: 25,
+  resizeMode: 'contain',
   },
+
   busFab: {
-  bottom: 100, // Adjust the position for the bus floating button
+  bottom: 170, // Adjust the position for the bus floating button
   },
   dot: {
     width: 24,
