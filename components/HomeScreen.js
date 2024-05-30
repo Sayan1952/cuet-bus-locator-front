@@ -1,12 +1,12 @@
 // components/HomeScreen.js
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator, Button, Image, TouchableOpacity } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
 
 
 const HomeScreen = () => {
-  const [busLocation, setBusLocation] = useState(null);
+  const [busLocations, setBusLocations] = useState({});
   const [errorMsg, setErrorMsg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
@@ -15,11 +15,11 @@ const HomeScreen = () => {
 
 
   useEffect(() => {
-    const fetchBusLocation = async () => {
+    const fetchBusLocations = async () => {
       try {
         const response = await fetch('http://192.168.0.116:3000/location');
         const data = await response.json();
-        setBusLocation(data);
+        setBusLocations(data);
         setLoading(false);
       } catch (error) {
         setErrorMsg('Error fetching bus location');
@@ -27,8 +27,8 @@ const HomeScreen = () => {
       }
     };
 
-    fetchBusLocation();
-    const interval = setInterval(fetchBusLocation, 5000); // Update every 5 seconds
+    fetchBusLocations();
+    const interval = setInterval(fetchBusLocations, 5000); // Update every 5 seconds
     return () => clearInterval(interval); // Cleanup interval on component unmount
   }, []);
 
@@ -78,25 +78,25 @@ useEffect(() => {
     }
   };
 
-  const getBusLocation = async () => {
-    try {
-      const response = await fetch('http://192.168.0.116:3000/location'); // Replace YOUR_LOCAL_IP with your actual IP
-      const data = await response.json();
-      console.log('Bus location:', data);
-      setBusLocation(data);
+  // const getBusLocation = async () => {
+  //   try {
+  //     const response = await fetch('http://192.168.0.116:3000/location'); // Replace YOUR_LOCAL_IP with your actual IP
+  //     const data = await response.json();
+  //     console.log('Bus location:', data);
+  //     setBusLocations(data);
 
-      // Animate and zoom to bus location
-      mapViewRef.current.animateToRegion({
-        latitude: data.latitude,
-        longitude: data.longitude,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
-      });
-    } catch (error) {
-      console.error('Error fetching bus location:', error);
-      setErrorMsg('Error fetching bus location');
-    }
-  };
+  //     // Animate and zoom to bus location
+  //     mapViewRef.current.animateToRegion({
+  //       latitude: data.latitude,
+  //       longitude: data.longitude,
+  //       latitudeDelta: 0.005,
+  //       longitudeDelta: 0.005,
+  //     });
+  //   } catch (error) {
+  //     console.error('Error fetching bus location:', error);
+  //     setErrorMsg('Error fetching bus location');
+  //   }
+  // };
 
      const mapViewRef = React.useRef(null);
 
@@ -107,22 +107,23 @@ useEffect(() => {
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <MapView style={styles.map}
-        ref={mapViewRef}>
-          {busLocation && (
+        ref={mapViewRef}
+        initialRegion={{
+            latitude: userLocation ? userLocation.latitude : 22.335351479700915,
+            longitude: userLocation ? userLocation.longitude : 91.82630854206182,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1,
+          }}>
+          {Object.keys(busLocations).map((key) => (
             <Marker
-              coordinate={{
-                latitude: busLocation.latitude,
-                longitude: busLocation.longitude,
-                latitudeDelta: 0.00922,
-                longitudeDelta: 0.00421,
-              }}
-              title={"Bus Location"}
+              key={key}
+              coordinate={busLocations[key]}
               anchor={{ x: 0.5, y: 1 }}
             >
-              <Text style={styles.busName}>Shurma</Text>
+              <Text style={styles.busName}>{key}</Text>
               <Image source={require('../assets/icons8-bus-48.png')} style={styles.busIcon} />
             </Marker>
-          )}
+          ))}
           {userLocation && (
             <Marker
               coordinate={{
@@ -146,9 +147,7 @@ useEffect(() => {
           <View style={styles.circle} />
         </View>
       </TouchableOpacity>
-        <TouchableOpacity style={[styles.fab, styles.busFab]} onPress={getBusLocation}>
-        <Image source={require('../assets/bus-icon.png')} style={styles.busIcon} />
-      </TouchableOpacity>
+        
       </View>
       {errorMsg && <Text style={styles.text}>{errorMsg}</Text>}
     </View>
@@ -182,13 +181,22 @@ const styles = StyleSheet.create({
   },
 
    busName: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: 5,
-    marginBottom: 5,
+    marginBottom: 2,
   },
-
+  calloutContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    elevation: 4,
+  },
   fab: {
     position: 'absolute',
     bottom: 100,
