@@ -1,119 +1,90 @@
 // components/HomeScreen.js
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator, Button, Image, TouchableOpacity } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import { StyleSheet, Text, View, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 
-
-const HomeScreen = () => {
-  const [busLocations, setBusLocations] = useState({});
-  const [errorMsg, setErrorMsg] = useState(null);
+const HomeScreen = ({ route }) => {
+  const [busLocations, setBusLocations] = useState({
+    Shurma: { latitude: 22.468345, longitude: 91.970927 },
+    Padma: { latitude: 22.364549, longitude: 91.821107 },
+    Matamuhuri: { latitude: 22.336224, longitude: 91.823455 },
+  });
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
   const [heading, setHeading] = useState(0);
-  const [checkMyLocationPressed, setCheckMyLocationPressed] = useState(false);
+  const mapViewRef = useRef(null);
 
+  const { selectedBus } = route.params || {};
 
   useEffect(() => {
-    const fetchBusLocations = async () => {
-      try {
-        const response = await fetch('http://192.168.0.116:3000/location');
-        const data = await response.json();
-        setBusLocations(data);
-        setLoading(false);
-      } catch (error) {
-        setErrorMsg('Error fetching bus location');
-        setLoading(false);
-      }
-    };
-
-    fetchBusLocations();
-    const interval = setInterval(fetchBusLocations, 5000); // Update every 5 seconds
-    return () => clearInterval(interval); // Cleanup interval on component unmount
-  }, []);
-
-useEffect(() => {
     const startWatchingLocation = async () => {
-      try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setErrorMsg('Permission to access location was denied');
-          return;
-        }
-
-        await Location.watchPositionAsync(
-          {
-            accuracy: Location.Accuracy.High,
-            timeInterval: 1000, // Update every second
-            distanceInterval: 1, // Update every meter
-          },
-          (location) => {
-            setUserLocation(location.coords);
-          }
-        );
-
-        await Location.watchHeadingAsync((headingData) => {
-          setHeading(headingData.trueHeading);
-        });
-      } catch (error) {
-        console.error('Error watching location:', error);
-        setErrorMsg('Error watching location');
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Permission to access location was denied');
+        return;
       }
+
+      await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 1000,
+          distanceInterval: 1,
+        },
+        (location) => {
+          setUserLocation(location.coords);
+        }
+      );
+
+      await Location.watchHeadingAsync((headingData) => {
+        setHeading(headingData.trueHeading);
+      });
     };
 
     startWatchingLocation();
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (selectedBus && mapViewRef.current && busLocations[selectedBus]) {
+      const busLocation = busLocations[selectedBus];
+      mapViewRef.current.animateToRegion({
+        latitude: busLocation.latitude,
+        longitude: busLocation.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    }
+  }, [selectedBus, busLocations]);
 
   const getUserLocation = () => {
     if (userLocation) {
-      // Animate and zoom to user's location
       mapViewRef.current.animateToRegion({
         latitude: userLocation.latitude,
         longitude: userLocation.longitude,
-        latitudeDelta: 0.005, // Smaller delta for more zoom
-        longitudeDelta: 0.005, // Smaller delta for more zoom
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
       });
     } else {
-      setErrorMsg('User location is not available');
+      alert('User location not available');
     }
   };
-
-  // const getBusLocation = async () => {
-  //   try {
-  //     const response = await fetch('http://192.168.0.116:3000/location'); // Replace YOUR_LOCAL_IP with your actual IP
-  //     const data = await response.json();
-  //     console.log('Bus location:', data);
-  //     setBusLocations(data);
-
-  //     // Animate and zoom to bus location
-  //     mapViewRef.current.animateToRegion({
-  //       latitude: data.latitude,
-  //       longitude: data.longitude,
-  //       latitudeDelta: 0.005,
-  //       longitudeDelta: 0.005,
-  //     });
-  //   } catch (error) {
-  //     console.error('Error fetching bus location:', error);
-  //     setErrorMsg('Error fetching bus location');
-  //   }
-  // };
-
-     const mapViewRef = React.useRef(null);
-
 
   return (
     <View style={styles.container}>
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
-        <MapView style={styles.map}
-        ref={mapViewRef}
-        initialRegion={{
+        <MapView
+          style={styles.map}
+          ref={mapViewRef}
+          initialRegion={{
             latitude: userLocation ? userLocation.latitude : 22.335351479700915,
             longitude: userLocation ? userLocation.longitude : 91.82630854206182,
             latitudeDelta: 0.1,
             longitudeDelta: 0.1,
-          }}>
+          }}
+        >
           {Object.keys(busLocations).map((key) => (
             <Marker
               key={key}
@@ -143,13 +114,11 @@ useEffect(() => {
       )}
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.fab} onPress={getUserLocation}>
-        <View style={styles.innerFab}>
-          <View style={styles.circle} />
-        </View>
-      </TouchableOpacity>
-        
+          <View style={styles.innerFab}>
+            <View style={styles.circle} />
+          </View>
+        </TouchableOpacity>
       </View>
-      {errorMsg && <Text style={styles.text}>{errorMsg}</Text>}
     </View>
   );
 };
@@ -160,13 +129,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   map: {
     width: '100%',
     height: '100%',
     marginTop: 10,
   },
-
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -174,28 +141,16 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 20,
   },
-
   customMarker: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-
-   busName: {
+  busName: {
     backgroundColor: 'rgba(255, 255, 255, 0.5)',
     paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: 5,
     marginBottom: 2,
-  },
-  calloutContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    padding: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    elevation: 4,
   },
   fab: {
     position: 'absolute',
@@ -209,31 +164,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 4,
   },
-
   innerFab: {
-  width: 52,
-  height: 52,
-  borderRadius: 26,
-  backgroundColor: '#fff',
-  justifyContent: 'center',
-  alignItems: 'center',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-
   circle: {
-  width: 40,
-  height: 40,
-  borderRadius: 20,
-  backgroundColor: '#4285F4',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#4285F4',
   },
-
   busIcon: {
-  height: 25,
-  width: 25,
-  resizeMode: 'contain',
-  },
-
-  busFab: {
-  bottom: 170, // Adjust the position for the bus floating button
+    height: 25,
+    width: 25,
+    resizeMode: 'contain',
   },
   dot: {
     width: 24,
@@ -244,8 +192,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-  },  
-   
+  },
   arrow: {
     position: 'absolute',
     top: -8,
@@ -257,11 +204,6 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     borderBottomColor: '#007AFF',
-  },
-  text: {
-    margin: 16,
-    fontSize: 16,
-    color: 'red',
   },
 });
 
